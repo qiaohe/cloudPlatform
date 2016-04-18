@@ -2,7 +2,6 @@
 var config = require('../config');
 var Promise = require('bluebird');
 var request = Promise.promisifyAll(require('request'));
-var redis = require('../common/redisClient');
 var _ = require('lodash');
 var i18n = require('../i18n/localeMessage');
 var qiniu = require('qiniu');

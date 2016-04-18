@@ -5,7 +5,6 @@ var i18n = require('../i18n/localeMessage');
 var config = require('../config');
 var routeConfig = require('../routerConfig');
 var _ = require('lodash');
-var redisClient = require('./redisClient');
 var url = require('url');
 function authorizedIfNeeded(req) {
     var routeItem = _.findLast(routeConfig, function (item) {

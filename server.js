@@ -1,19 +1,12 @@
 'use strict';
 var restify = require('restify');
 var config = require('./config');
-var redis = require('./common/redisClient');
 var router = require('./common/router');
 var auth = require('./common/auth');
 var logger = require('./common/logger');
 var server = restify.createServer(config.server);
-var schedule = require('node-schedule');
-var registrationDAO = require('./dao/registrationDAO');
-var deviceDAO = require('./dao/deviceDAO');
-var medicalDAO = require('./dao/medicalDAO');
 var moment = require('moment');
 var util = require('util');
-var queue = require('./common/queue');
-var pusher = require('./domain/NotificationPusher');
 restify.CORS.ALLOW_HEADERS.push('Access-Control-Allow-Origin');
 server.use(restify.CORS());
 server.opts(/.*/, function (req, res, next) {
@@ -31,7 +24,7 @@ server.use(restify.queryParser({
 server.use(restify.gzipResponse());
 server.use(restify.bodyParser());
 server.use(logger());
-server.use(auth());
+//server.use(auth());
 router.route(server);
 server.on("uncaughtException", function (req, res, route, err) {
     res.send({ret: 1, message: err.message});

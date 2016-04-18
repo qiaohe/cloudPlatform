@@ -2,7 +2,6 @@
 var config = require('../config');
 var notificationDAO = require('../dao/notificationDAO');
 var JPush = require("jpush-sdk");
-var redis = require('../common/redisClient');
 module.exports = {
     push: function (notification, callback) {
         var client = JPush.buildClient(config.jpush.appKey, config.jpush.masterSecret);

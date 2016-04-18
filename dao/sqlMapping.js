@@ -15,6 +15,7 @@ module.exports = {
         findCardByHospital: 'select p.memberCardNo, p.memberType, pf.mobile, p.balance from Patient p left JOIN PatientBasicInfo pf on p.patientBasicInfoId = pf.id  where hospitalId=? and patientBasicInfoId=?'
     },
     hospital: {
+        insert: 'insert Hospital set ?',
         findByNameLike: 'select id, name, tag from Hospital where name like ?',
         findById: 'select id, name, tag, images, address, icon, introduction, customerServiceUid, contactMobile, contact,telephone, trafficRoute from Hospital where id = ?',
         findByIdWith: 'select id, name, icon as headPic from Hospital where id=?',

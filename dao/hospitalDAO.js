@@ -3,6 +3,9 @@ var db = require('../common/db');
 var sqlMapping = require('./sqlMapping');
 var moment = require('moment');
 module.exports = {
+    insert: function (hospital) {
+        return db.query(sqlMapping.hospital.insert, hospital);
+    },
     searchHospital: function (name, page) {
         return db.query('select id, name, tag, icon from Hospital where name like \'%' + name + '%\' limit ' + page.from + ',' + page.size);
     },

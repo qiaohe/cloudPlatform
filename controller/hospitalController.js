@@ -1,13 +1,9 @@
 "use strict";
 var config = require('../config');
-var redis = require('../common/redisClient');
 var i18n = require('../i18n/localeMessage');
 var hospitalDAO = require('../dao/hospitalDAO');
-var medicalDAO = require('../dao/medicalDAO');
 var _ = require('lodash');
 var moment = require('moment');
-var rongcloudSDK = require('rongcloud-sdk');
-rongcloudSDK.init(config.rongcloud.appKey, config.rongcloud.appSecret);
 module.exports = {
     searchHospital: function (req, res, next) {
         hospitalDAO.searchHospital(req.query.name, {
@@ -39,6 +35,16 @@ module.exports = {
     getHospitals: function (req, res, next) {
         hospitalDAO.findAll({from: req.query.from, size: req.query.size}).then(function (hospitals) {
             return res.send({ret: 0, data: hospitals});
+        }).catch(function (err) {
+            res.send({ret: 1, message: err.message});
+        });
+        return next();
+    },
+    addHospital: function (req, res, next) {
+        var h = req.body;
+        hospitalDAO.insert(h).then(function (result) {
+            h.id = result.insertId;
+            res.send({ret: 0, data: h});
         }).catch(function (err) {
             res.send({ret: 1, message: err.message});
         });
