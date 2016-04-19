@@ -18,8 +18,13 @@ module.exports = [
         handler: hospitalController.getHospitals
     },
     {
-        method: "get",
+        method: "post",
         path: "/api/hospitals",
         handler: hospitalController.addHospital
+    },
+    {
+        method: "put",
+        path: "/api/hospitals",
+        handler: hospitalController.updateHospital
     }
 ];
