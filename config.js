@@ -4,14 +4,14 @@ module.exports = {
     server: {
         name: 'cloud platform admin',
         version: '0.0.1',
-        host: 'localhost',
+        host: 'platform.hisforce.cn',
         port: 8080
     },
     db: {
-        host: '121.42.171.213',
+        host: '10.161.161.229',
         port: '3306',
         user: 'root',
-        password: 'heqiao75518',
+        password: 'heqiao75518?',
         debug: false,
         multipleStatements: true,
         dateStrings: true,
@@ -22,7 +22,14 @@ module.exports = {
         tokenSecret: '1~a',
         tokenExpire: 86400,
         dateStrings: 'true',
-        defaultHeadPic: 'http://7xrtp2.com2.z0.glb.qiniucdn.com/headPic.png'
+        defaultHeadPic: 'http://7xrtp2.com2.z0.glb.qiniucdn.com/headPic.png',
+        defaultHospitalIcon: 'http://7xrtp2.com2.z0.glb.qiniucdn.com/Default%20hospital.png',
+        defaultSysBackground: 'http://7xrtp2.com2.z0.glb.qiniucdn.com/background.jpg',
+        geocoderTemplate:'http://api.map.baidu.com/geocoder/v2/?address=:address&output=json&ak=QBKVP7cc187SyN7ahApRdn5TzWeyttYI'
+    },
+    redis: {
+        host: '10.161.161.229',
+        port: 6379
     },
     sms: {
         providerUrl: 'https://sms.yunpian.com/v1/sms/send.json',

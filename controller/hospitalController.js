@@ -5,34 +5,8 @@ var hospitalDAO = require('../dao/hospitalDAO');
 var _ = require('lodash');
 var Promise = require('bluebird');
 var moment = require('moment');
+var redis = require('../common/redisClient');
 module.exports = {
-    searchHospital: function (req, res, next) {
-        hospitalDAO.searchHospital(req.query.name, {
-            from: req.query.from,
-            size: req.query.size
-        }).then(function (hospitals) {
-            if (!hospitals) return res.send({ret: 0, data: []});
-            return res.send({ret: 0, data: hospitals});
-        }).catch(function (err) {
-            res.send({ret: 1, message: err.message});
-        });
-        return next();
-    },
-
-    search: function (req, res, next) {
-        var data = {};
-        hospitalDAO.searchHospital(req.query.name, {from: 0, size: 3}).then(function (hopitals) {
-            data.hopitals = hopitals;
-            return hospitalDAO.searchDoctor(req.query.name, {from: 0, size: 3});
-        }).then(function (doctors) {
-            data.doctors = doctors;
-            return res.send({ret: 0, data: data});
-        }).catch(function (err) {
-            res.send({ret: 1, message: err.message});
-        });
-        return next();
-    },
-
     getHospitals: function (req, res, next) {
         var pageIndex = +req.query.pageIndex;
         var pageSize = +req.query.pageSize;
@@ -48,91 +22,101 @@ module.exports = {
         return next();
     },
     addHospital: function (req, res, next) {
-        var h = req.body;
-        h.createDate = new Date();
-        h.enabled = 1;
-        var adminJobTitle = {};
-        var adminRole = {};
-        var jobTitle = {};
-        hospitalDAO.insert(h).then(function (result) {
-            h.id = result.insertId;
-            return hospitalDAO.insertRole({hospitalId: h.id, name: '医生'});
+        var hospital = _.assign(req.body, {
+            icon: config.app.defaultHospitalIcon,
+            background: config.app.defaultSysBackground,
+            createDate: new Date(),
+            enabled: 1
+        });
+        hospitalDAO.findHospitalByDomain(hospital.domainName).then(function (hospitals) {
+            if (hospitals && hospitals.length > 0) throw new Error(i18n.get('domain.exists'));
+            return hospitalDAO.findHospitalByName(hospital.name);
+        }).then(function (hospitals) {
+            if (hospitals && hospitals.length > 0) throw new Error(i18n.get('hospital.exists'));
+            return hospitalDAO.insert(hospital);
         }).then(function (result) {
-            return hospitalDAO.insertJobTitle({hospitalId: h.id, role: result.insertId, name: '主治医师'});
+            hospital.id = result.insertId;
+            return hospitalDAO.insertRole({hospitalId: hospital.id, name: '医生'});
         }).then(function (result) {
-            jobTitle = result.insertId;
-            return hospitalDAO.insertJobTitleMenuItem({jobTitleId: jobTitle, menuItem: 4});
+            var role = result.insertId;
+            return hospitalDAO.insertJobTitle({
+                hospitalId: hospital.id,
+                role: role,
+                name: '主治医师'
+            }).then(function (result) {
+                var jobTitle = result.insertId;
+                return Promise.each([{jobTitleId: jobTitle, menuItem: 4}, {
+                    jobTitleId: jobTitle,
+                    menuItem: 5
+                }, {jobTitleId: jobTitle, menuItem: 35}], function (item) {
+                    return hospitalDAO.insertJobTitleMenuItem(item);
+                })
+            })
         }).then(function (result) {
-            return hospitalDAO.insertJobTitleMenuItem({jobTitleId: jobTitle, menuItem: 5});
+            return hospitalDAO.insertRole({hospitalId: hospital.id, name: '挂号'});
         }).then(function (result) {
-            return hospitalDAO.insertJobTitleMenuItem({jobTitleId: jobTitle, menuItem: 35});
+            return hospitalDAO.insertJobTitle({hospitalId: hospital.id, role: result.insertId, name: '导医挂号'});
         }).then(function (result) {
-            return hospitalDAO.insertRole({hospitalId: h.id, name: '挂号'});
+            var jobTitle = result.insertId;
+            return Promise.each([{jobTitleId: jobTitle, menuItem: 1}, {
+                jobTitleId: jobTitle,
+                menuItem: 2
+            }, {jobTitleId: jobTitle, menuItem: 20}, {jobTitleId: jobTitle, menuItem: 7}], function (item) {
+                return hospitalDAO.insertJobTitleMenuItem(item);
+            })
         }).then(function (result) {
-            return hospitalDAO.insertJobTitle({hospitalId: h.id, role: result.insertId, name: '导医挂号'});
+            return hospitalDAO.insertRole({hospitalId: hospital.id, name: '财务'});
         }).then(function (result) {
-            jobTitle = result.insertId;
-            return hospitalDAO.insertJobTitleMenuItem({jobTitleId: jobTitle, menuItem: 1});
+            return hospitalDAO.insertJobTitle({hospitalId: hospital.id, role: result.insertId, name: '财务收费'});
         }).then(function (result) {
-            return hospitalDAO.insertJobTitleMenuItem({jobTitleId: jobTitle, menuItem: 2});
+            var jobTitle = result.insertId;
+            return Promise.each([{jobTitleId: jobTitle, menuItem: 1}, {
+                jobTitleId: jobTitle,
+                menuItem: 2
+            }, {jobTitleId: jobTitle, menuItem: 28}, {jobTitleId: jobTitle, menuItem: 29}, {
+                jobTitleId: jobTitle,
+                menuItem: 31
+            }], function (item) {
+                return hospitalDAO.insertJobTitleMenuItem(item);
+            });
         }).then(function (result) {
-            return hospitalDAO.insertJobTitleMenuItem({jobTitleId: jobTitle, menuItem: 20});
+            return hospitalDAO.insertRole({hospitalId: hospital.id, name: '药房'});
         }).then(function (result) {
-            return hospitalDAO.insertJobTitleMenuItem({jobTitleId: jobTitle, menuItem: 7});
+            return hospitalDAO.insertJobTitle({hospitalId: hospital.id, role: result.insertId, name: '药房管理'});
         }).then(function (result) {
-            return hospitalDAO.insertRole({hospitalId: h.id, name: '财务'});
+            var jobTitle = result.insertId;
+            Promise.each([{jobTitleId: jobTitle, menuItem: 23}, {
+                jobTitleId: jobTitle,
+                menuItem: 24
+            }, {jobTitleId: jobTitle, menuItem: 25},
+                {jobTitleId: jobTitle, menuItem: 26}, {jobTitleId: jobTitle, menuItem: 34}], function (item) {
+                return hospitalDAO.insertJobTitleMenuItem(item);
+            })
         }).then(function (result) {
-            return hospitalDAO.insertJobTitle({hospitalId: h.id, role: result.insertId, name: '财务收费'});
-        }).then(function (result) {
-            jobTitle = result.insertId;
-            return hospitalDAO.insertJobTitleMenuItem({jobTitleId: jobTitle, menuItem: 1});
-        }).then(function (result) {
-            return hospitalDAO.insertJobTitleMenuItem({jobTitleId: jobTitle, menuItem: 2});
-        }).then(function (result) {
-            return hospitalDAO.insertJobTitleMenuItem({jobTitleId: jobTitle, menuItem: 28});
-        }).then(function (result) {
-            return hospitalDAO.insertJobTitleMenuItem({jobTitleId: jobTitle, menuItem: 29});
-        }).then(function (result) {
-            return hospitalDAO.insertJobTitleMenuItem({jobTitleId: jobTitle, menuItem: 31});
-        }).then(function (result) {
-            return hospitalDAO.insertRole({hospitalId: h.id, name: '药房'});
-        }).then(function (result) {
-            return hospitalDAO.insertJobTitle({hospitalId: h.id, role: result.insertId, name: '药房管理'});
-        }).then(function (result) {
-            jobTitle = result.insertId;
-            return hospitalDAO.insertJobTitleMenuItem({jobTitleId: jobTitle, menuItem: 23});
-        }).then(function (result) {
-            return hospitalDAO.insertJobTitleMenuItem({jobTitleId: jobTitle, menuItem: 24});
-        }).then(function (result) {
-            return hospitalDAO.insertJobTitleMenuItem({jobTitleId: jobTitle, menuItem: 25});
-        }).then(function (result) {
-            return hospitalDAO.insertJobTitleMenuItem({jobTitleId: jobTitle, menuItem: 26});
-        }).then(function (result) {
-            return hospitalDAO.insertJobTitleMenuItem({jobTitleId: jobTitle, menuItem: 34});
-        }).then(function (result) {
-            return Promise.map([{enabled: 1, hospitalId: h.id, name: '08:00-09:00'},
-                {enabled: 1, hospitalId: h.id, name: '08:00-09:00'},
-                {enabled: 1, hospitalId: h.id, name: '09:00-10:00'},
-                {enabled: 1, hospitalId: h.id, name: '10:00-11:00'},
-                {enabled: 1, hospitalId: h.id, name: '11:00-12:00'},
-                {enabled: 1, hospitalId: h.id, name: '12:00-13:00'},
-                {enabled: 1, hospitalId: h.id, name: '13:00-14:00'},
-                {enabled: 1, hospitalId: h.id, name: '14:00-15:00'},
-                {enabled: 1, hospitalId: h.id, name: '15:00-16:00'},
-                {enabled: 1, hospitalId: h.id, name: '16:00-17:00'},
-                {enabled: 1, hospitalId: h.id, name: '17:00-18:00'},
-                {enabled: 1, hospitalId: h.id, name: '18:00-19:00'},
-                {enabled: 1, hospitalId: h.id, name: '19:00-20:00'}], function (period, index) {
+            return Promise.each([{enabled: 1, hospitalId: hospital.id, name: '08:00-09:00'},
+                {enabled: 1, hospitalId: hospital.id, name: '09:00-10:00'},
+                {enabled: 1, hospitalId: hospital.id, name: '10:00-11:00'},
+                {enabled: 1, hospitalId: hospital.id, name: '11:00-12:00'},
+                {enabled: 1, hospitalId: hospital.id, name: '12:00-13:00'},
+                {enabled: 1, hospitalId: hospital.id, name: '13:00-14:00'},
+                {enabled: 1, hospitalId: hospital.id, name: '14:00-15:00'},
+                {enabled: 1, hospitalId: hospital.id, name: '15:00-16:00'},
+                {enabled: 1, hospitalId: hospital.id, name: '16:00-17:00'},
+                {enabled: 1, hospitalId: hospital.id, name: '17:00-18:00'}], function (period, index) {
                 return hospitalDAO.insertShiftPeriod(period);
             }).then(function (result) {
-                Promise.map([{hospitalId: h.id, type: 0, value: '每天1次'}, {hospitalId: h.id, type: 0, value: '每天2次'},
-                    {hospitalId: h.id, type: 0, value: '每天3次'}, {
-                        hospitalId: h.id,
+                return Promise.each([{hospitalId: hospital.id, type: 0, value: '每天1次'}, {
+                    hospitalId: hospital.id,
+                    type: 0,
+                    value: '每天2次'
+                },
+                    {hospitalId: hospital.id, type: 0, value: '每天3次'}, {
+                        hospitalId: hospital.id,
                         type: 0,
                         value: '每天4次'
-                    }, {hospitalId: h.id, type: 1, value: 1},
-                    {hospitalId: h.id, type: 1, value: 2}, {hospitalId: h.id, type: 1, value: 3}, {
-                        hospitalId: h.id,
+                    }, {hospitalId: hospital.id, type: 1, value: 1},
+                    {hospitalId: hospital.id, type: 1, value: 2}, {hospitalId: hospital.id, type: 1, value: 3}, {
+                        hospitalId: hospital.id,
                         type: 1,
                         value: 4
                     }], function (item) {
@@ -142,54 +126,70 @@ module.exports = {
                 })
             })
         }).then(function (result) {
-            return hospitalDAO.insertRole({hospitalId: h.id, name: '系统管理员'});
+            return hospitalDAO.insertRole({hospitalId: hospital.id, name: '系统管理员'});
         }).then(function (result) {
-            adminRole = result.insertId;
-            return hospitalDAO.insertJobTitle({hospitalId: h.id, role: result.insertId, name: '管理员'});
+            hospital.adminRole = result.insertId;
+            return hospitalDAO.insertJobTitle({hospitalId: hospital.id, role: hospital.adminRole, name: '管理员'});
         }).then(function (result) {
-            adminJobTitle = result.insertId;
-            return hospitalDAO.insertJobTitleMenuItem({jobTitleId: adminJobTitle, menuItem: 10});
-        }).then(function (result) {
-            return hospitalDAO.insertJobTitleMenuItem({jobTitleId: adminJobTitle, menuItem: 11});
-        }).then(function (result) {
-            return hospitalDAO.insertJobTitleMenuItem({jobTitleId: adminJobTitle, menuItem: 13});
-        }).then(function (result) {
-            return hospitalDAO.insertJobTitleMenuItem({jobTitleId: adminJobTitle, menuItem: 14});
-        }).then(function (result) {
-            return hospitalDAO.insertJobTitleMenuItem({jobTitleId: adminJobTitle, menuItem: 21});
-        }).then(function (result) {
-            return hospitalDAO.insertEmployee({
-                admin: 1,
-                gender: 1,
-                createDate: new Date(),
-                hospitalId: h.id,
-                name: '管理员',
-                mobile: 'admin',
-                password: '698d51a19d8a121ce581499d7b701668',
-                headPic: 'http://7xrtp2.com2.z0.glb.qiniucdn.com/headPic.png',
-                status: 0,
-                role: adminRole,
-                jobTitle: adminJobTitle
-            });
-        }).then(function (result) {
-            h.admin = {
-                admin: 1,
-                gender: 1,
-                createDate: new Date(),
-                hospitalId: h.id,
-                name: '管理员',
-                mobile: 'admin',
-                password: '698d51a19d8a121ce581499d7b701668',
-                headPic: 'http://7xrtp2.com2.z0.glb.qiniucdn.com/headPic.png',
-                status: 0
-            };
-            res.send({ret: 0, data: h});
-
+            var adminJobTitle = result.insertId;
+            Promise.each([{jobTitleId: adminJobTitle, menuItem: 10}, {
+                jobTitleId: adminJobTitle,
+                menuItem: 11
+            }, {jobTitleId: adminJobTitle, menuItem: 12}, {
+                jobTitleId: adminJobTitle,
+                menuItem: 13
+            }, {jobTitleId: adminJobTitle, menuItem: 14}, {
+                jobTitleId: adminJobTitle,
+                menuItem: 21
+            }, {jobTitleId: adminJobTitle, menuItem: 20}], function (item) {
+                return hospitalDAO.insertJobTitleMenuItem(item)
+            }).then(function () {
+                return hospitalDAO.insertEmployee({
+                    admin: 1,
+                    gender: 1,
+                    createDate: new Date(),
+                    hospitalId: hospital.id,
+                    name: '管理员',
+                    mobile: 'admin',
+                    password: '698d51a19d8a121ce581499d7b701668',
+                    headPic: config.app.defaultHeadPic,
+                    status: 0,
+                    role: hospital.adminRole,
+                    jobTitle: adminJobTitle
+                });
+            }).then(function (result) {
+                return hospitalDAO.update({
+                    id: hospital.id,
+                    administrator: result.insertId,
+                    customerServiceUid: result.insertId
+                });
+            }).then(function (result) {
+                hospitalDAO.findPeriods(hospital.id).then(function (periods) {
+                    Promise.map(periods, function (period, index) {
+                        var key = 'h:' + hospital.id + ':p:' + period.id;
+                        return redis.setAsync(key, String.fromCharCode(65 + index))
+                    }).then(function (result) {
+                        hospital.admin = {
+                            admin: 1,
+                            gender: 1,
+                            createDate: new Date(),
+                            hospitalId: hospital.id,
+                            name: '管理员',
+                            mobile: 'admin',
+                            password: '698d51a19d8a121ce581499d7b701668',
+                            headPic: config.app.defaultHeadPic,
+                            status: 0
+                        };
+                        res.send({ret: 0, data: hospital});
+                    });
+                })
+            })
         }).catch(function (err) {
             res.send({ret: 1, message: err.message});
         });
         return next();
     },
+
     updateHospital: function (req, res, next) {
         var h = req.body;
         h.updateDate = new Date();
@@ -199,6 +199,14 @@ module.exports = {
             res.send({ret: 0, data: hospitals[0]});
         }).catch(function (err) {
             res.send({ret: 1, message: err.message});
+        });
+        return next();
+    },
+    getHospitalById: function (req, res, next) {
+        hospitalDAO.findById(req.params.hospitalId).then(function (hospitals) {
+            res.send({ret: 0, data: hospitals[0]})
+        }).catch(function (err) {
+            res.send({ret: 0, message: err.message})
         });
         return next();
     }

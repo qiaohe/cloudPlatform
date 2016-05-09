@@ -36,5 +36,19 @@ module.exports = {
             }
         });
         return next();
+    },
+    getGeocoder: function (req, res, next) {
+        var address = req.query.address;
+        var url = config.app.geocoderTemplate.replace(':address', encodeURIComponent(address));
+        request.getAsync({
+            url: url,
+            headers: {
+                'content-type': 'application/json'
+            }
+        }).then(function (response, body) {
+            res.send({ret: 0, data: JSON.parse(response[0].body)});
+        }).catch(function (err) {
+            res.send({ret: 1, message: err.message});
+        })
     }
 }

@@ -14,6 +14,12 @@ module.exports = {
     searchHospital: function (name, page) {
         return db.query('select * from Hospital where name like \'%' + name + '%\' limit ' + page.from + ',' + page.size);
     },
+    findHospitalByName: function (name) {
+        return db.query('select * from Hospital where name =\'' + name + '\'');
+    },
+    findHospitalByDomain: function (name) {
+        return db.query('select * from Hospital where domainName =\'' + name + '\'');
+    },
 
     findAll: function (page) {
         return db.queryWithCount(sqlMapping.hospital.findAll, [page.from, page.size])
@@ -35,5 +41,9 @@ module.exports = {
     },
     insertEmployee: function (employee) {
         return db.query('insert Employee set ?', employee);
+    },
+    findPeriods: function (hospitalId) {
+        return db.query('select id from ShiftPeriod where hospitalId = ? order by name', hospitalId);
     }
+
 }

@@ -5,6 +5,7 @@ var i18n = require('../i18n/localeMessage');
 var config = require('../config');
 var routeConfig = require('../routerConfig');
 var _ = require('lodash');
+var redisClient = require('./redisClient');
 var url = require('url');
 function authorizedIfNeeded(req) {
     var routeItem = _.findLast(routeConfig, function (item) {
@@ -18,18 +19,14 @@ function authorizedIfNeeded(req) {
 function auth() {
     function ensureAuthorized(req, res, next) {
         if (!authorizedIfNeeded(req)) return next();
-        var token = req.headers['token'] || req.query.token || req.body.token;
+        var token = req.headers['token'] || req.query['token'] || req.body['token'];
         if (!token) return res.send(403, i18n.get("access.not.authorized"));
-        jwt.verifyAsync(token, config.app.tokenSecret).then(function (user) {
-            if (user.exp * 1000 <= Date.now()) return res.send(403, i18n.get("token.expired"));
-            req.user = user;
-        }).then(function () {
-            return redisClient.getAsync(token);
-        }).then(function (reply) {
+        redisClient.getAsync('admin:' + token).then(function (reply) {
             if (!reply) return res.send(403, i18n.get("token.invalid"));
+            req.user = JSON.parse(reply);
             return next();
         }).catch(function (err) {
-            res.send({ret:1, data: err.message});
+            res.send(500, err);
         });
     }
 

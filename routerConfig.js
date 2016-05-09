@@ -3,28 +3,50 @@ var thirdPartyController = require('./controller/thirdPartyController');
 var hospitalController = require('./controller/hospitalController');
 module.exports = [
     {
-        method: "get",
-        path: "/api/sms/:mobile",
-        handler: thirdPartyController.sendSMS
+        method: "post",
+        path: "/api/login",
+        handler: authController.login
     },
     {
-        method: "get",
-        path: "/api/hospitals/search",
-        handler: hospitalController.searchHospital
+        method: "post",
+        path: "/api/logout",
+        handler: authController.logout,
+        secured: 'user'
     },
     {
         method: "get",
         path: "/api/hospitals",
-        handler: hospitalController.getHospitals
+        handler: hospitalController.getHospitals,
+        secured: 'user'
     },
     {
         method: "post",
         path: "/api/hospitals",
-        handler: hospitalController.addHospital
+        handler: hospitalController.addHospital,
+        secured: 'user'
     },
     {
         method: "put",
         path: "/api/hospitals",
-        handler: hospitalController.updateHospital
+        handler: hospitalController.updateHospital,
+        secured: 'user'
+    },
+    {
+        method: "get",
+        path: "/api/hospitals/:hospitalId",
+        handler: hospitalController.getHospitalById,
+        secured: 'user'
+    },
+    {
+        method: "post",
+        path: "/api/resetPwd",
+        handler: authController.resetPwd,
+        secured: 'user'
+    },
+    {
+        method: "get",
+        path: "/api/geocoder",
+        handler: thirdPartyController.getGeocoder,
+        secured: 'user'
     }
 ];

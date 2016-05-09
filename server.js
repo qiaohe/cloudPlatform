@@ -1,4 +1,6 @@
 'use strict';
+var md5 = require('md5');
+console.log(md5('111'));
 var restify = require('restify');
 var config = require('./config');
 var router = require('./common/router');
@@ -24,7 +26,7 @@ server.use(restify.queryParser({
 server.use(restify.gzipResponse());
 server.use(restify.bodyParser());
 server.use(logger());
-//server.use(auth());
+server.use(auth());
 router.route(server);
 server.on("uncaughtException", function (req, res, route, err) {
     res.send({ret: 1, message: err.message});
