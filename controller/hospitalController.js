@@ -138,10 +138,7 @@ module.exports = {
             }, {jobTitleId: adminJobTitle, menuItem: 12}, {
                 jobTitleId: adminJobTitle,
                 menuItem: 13
-            }, {jobTitleId: adminJobTitle, menuItem: 14}, {
-                jobTitleId: adminJobTitle,
-                menuItem: 21
-            }, {jobTitleId: adminJobTitle, menuItem: 20}], function (item) {
+            }, {jobTitleId: adminJobTitle, menuItem: 14}, {jobTitleId: adminJobTitle, menuItem: 21}], function (item) {
                 return hospitalDAO.insertJobTitleMenuItem(item)
             }).then(function () {
                 return hospitalDAO.insertEmployee({
@@ -208,6 +205,10 @@ module.exports = {
         }).catch(function (err) {
             res.send({ret: 0, message: err.message})
         });
+        return next();
+    },
+    getSales: function (req, res, next) {
+        res.send({ret: 0, data: config.sales});
         return next();
     }
 }

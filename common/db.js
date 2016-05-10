@@ -14,7 +14,6 @@ db.query = function (sql, values) {
         return connection.queryAsync(sql, values).then(function (result) {
             return result[0];
         }).catch(function (err) {
-            connection.destroy();
             throw new Error(err);
         });
     });
@@ -29,10 +28,8 @@ db.queryWithCount = function (sql, values) {
             return connection.queryAsync("SELECT FOUND_ROWS() as count");
         }).then(function(result){
             data.count = result[0][0].count;
-            connection.destroy();
             return data;
         }).catch(function (err) {
-            connection.destroy();
             throw new Error(err);
         });
     });

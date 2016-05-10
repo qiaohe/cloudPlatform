@@ -24,8 +24,8 @@ module.exports = {
         dateStrings: 'true',
         defaultHeadPic: 'http://7xrtp2.com2.z0.glb.qiniucdn.com/headPic.png',
         defaultHospitalIcon: 'http://7xrtp2.com2.z0.glb.qiniucdn.com/Default%20hospital.png',
-        defaultSysBackground: 'http://7xrtp2.com2.z0.glb.qiniucdn.com/background.jpg',
-        geocoderTemplate:'http://api.map.baidu.com/geocoder/v2/?address=:address&output=json&ak=QBKVP7cc187SyN7ahApRdn5TzWeyttYI'
+        defaultSysBackground: 'http://7xrtp2.com2.z0.glb.qiniucdn.com/background.jpgi',
+        geocoderTemplate: 'http://restapi.amap.com/v3/geocode/geo?address=:address&output=json&key=97c82a411d07caf7dd5d69427ff64ea9'
     },
     redis: {
         host: '10.161.161.229',
@@ -41,6 +41,7 @@ module.exports = {
         ak: "0d02DpW7tBPiN3TuZYV7WcxmN1C9aCiNZeW9fp5W",
         sk: "7zD3aC6xpvp_DfDZ0LJhjMq6n6nB6UVDbl37C5FZ",
         prefix: "http://7xrtp2.com2.z0.glb.qiniucdn.com/"
-    }
+    },
+    sales: ['姚红', '刘文涛', '刘安', '熊少林', '夏银庆', '胡国明', '滕俊杰', '张明生', '曹飞']
 };
 

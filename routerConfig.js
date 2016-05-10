@@ -48,5 +48,11 @@ module.exports = [
         path: "/api/geocoder",
         handler: thirdPartyController.getGeocoder,
         secured: 'user'
+    },
+    {
+        method: "get",
+        path: "/api/sales",
+        handler: hospitalController.getSales,
+        secured: 'user'
     }
 ];
