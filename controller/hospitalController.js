@@ -10,10 +10,18 @@ module.exports = {
     getHospitals: function (req, res, next) {
         var pageIndex = +req.query.pageIndex;
         var pageSize = +req.query.pageSize;
+        var conditions = [];
+        if (req.query.name) conditions.push('h.name like \'%' + req.query.name + '%\'');
+        if (req.query.businessPeople) conditions.push('h.businessPeople=\'' + req.query.businessPeople + '\'');
+        if (req.query.districtId) conditions.push('h.districtId=\'' + req.query.districtId + '\'');
+        if (req.query.provId) conditions.push('h.provId=\'' + req.query.provId + '\'');
+        if (req.query.cityId) conditions.push('h.cityId=\'' + req.query.cityId + '\'');
+        if (req.query.registerDateStart) conditions.push('h.createDate>=\'' + req.query.registerDateStart + ' 00:00:00\'');
+        if (req.query.registerDateEnd) conditions.push('h.createDate<=\'' + req.query.registerDateEnd + ' 23:59:59\'');
         hospitalDAO.findAll({
             from: (pageIndex - 1) * pageSize,
             size: pageSize
-        }).then(function (hospitals) {
+        }, conditions).then(function (hospitals) {
             hospitals.pageIndex = pageIndex;
             return res.send({ret: 0, data: hospitals});
         }).catch(function (err) {

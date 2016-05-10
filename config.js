@@ -4,14 +4,14 @@ module.exports = {
     server: {
         name: 'cloud platform admin',
         version: '0.0.1',
-        host: 'platform.hisforce.cn',
+        host: 'localhost',
         port: 8080
     },
     db: {
-        host: '10.161.161.229',
+        host: 'www.hisforce.cn',
         port: '3306',
         user: 'root',
-        password: 'heqiao75518?',
+        password: 'heqiao75518',
         debug: false,
         multipleStatements: true,
         dateStrings: true,
@@ -28,7 +28,7 @@ module.exports = {
         geocoderTemplate: 'http://restapi.amap.com/v3/geocode/geo?address=:address&output=json&key=97c82a411d07caf7dd5d69427ff64ea9'
     },
     redis: {
-        host: '10.161.161.229',
+        host: 'localhost',
         port: 6379
     },
     sms: {

@@ -21,8 +21,9 @@ module.exports = {
         return db.query('select * from Hospital where domainName =\'' + name + '\'');
     },
 
-    findAll: function (page) {
-        return db.queryWithCount(sqlMapping.hospital.findAll, [page.from, page.size])
+    findAll: function (page, conditions) {
+        var sql = conditions.length ? 'select SQL_CALC_FOUND_ROWS h.*, e.mobile as administratorName from Hospital h left JOIN Employee e on e.id = h.administrator where ' + conditions.join(' and ') + ' order by h.createDate desc limit ?,?' : sqlMapping.hospital.findAll;
+        return db.queryWithCount(sql, [page.from, page.size])
     },
     insertRole: function (role) {
         return db.query('insert Role set ?', role);
